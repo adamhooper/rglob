@@ -1,0 +1,10 @@
+# Glob-syntax pattern matching library
+#
+# Example:
+#   g = RGlob::Glob.new('a/b*.rb')
+#   g.match('a/b.rb') # returns true
+#   g.match('a/c.rb') # returns false
+#
+# The patterns hold the exact same meaning as in Dir.glob, but this library
+# does not rely upon the filesystem. Glob objects have the exact same
+# interface as Regexp.
