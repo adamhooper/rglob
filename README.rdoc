@@ -1,10 +1,45 @@
-# Glob-syntax pattern matching library
-#
-# Example:
-#   g = RGlob::Glob.new('a/b*.rb')
-#   g.match('a/b.rb') # returns true
-#   g.match('a/c.rb') # returns false
-#
-# The patterns hold the exact same meaning as in Dir.glob, but this library
-# does not rely upon the filesystem. Glob objects have the exact same
-# interface as Regexp.
+Glob-syntax pattern matching library
+
+Example:
+  g = RGlob::Glob.new('a/b*.rb')
+  g.match('a/b.rb') # returns true
+  g.match('a/c.rb') # returns false
+
+The patterns hold the exact same meaning as in Dir.glob, but this library
+does not rely upon the filesystem. Glob objects have the exact same
+interface as Regexp.
+
+RGlob can be used to create a substitute to Dir.glob, useful in unit tests. For
+instance:
+
+  require 'rglob'
+  require 'set'
+  class MyTest < Test::Unit::TestCase
+    def setup
+      @fs = Set.new(['a.rb', 'b.rb', 'c/d.rb'])
+
+      Dir.class_eval do
+        alias_method(:glob_without_rglob, :glob)
+        def glob(pattern) do
+          glob = RGlob::Glob.new(pattern)
+          returning [] do |ret|
+            @fs.each do |f|
+              ret << f if glob.match(pattern)
+            end
+          end
+        end
+      end
+    end
+
+    def teardown
+      Dir.class_eval do
+        alias_method(:glob, :glob_without_rglob)
+        remove_method(:glob_without_rglob)
+      end
+    end
+
+    def test_something_with_a_slightly_different_filesystem
+      @fs.add('a/b/c/d/e.rb')
+      call_my_code_which_uses_dir_glob('with', 'applicable', 'arguments')
+    end
+  end
